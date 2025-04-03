@@ -1,0 +1,9 @@
+https://rebootingsocialmedia.org/events/trust-safety-in-the-majority-world-workshop-call-for-contributions/
+
+Trust & Safety in the Majority Workshop: Interest Form & Call for Contributions
+
+
+
+I am a postdoctoral researcher investigating platform governance and free speech at Boston University and MIT. I hold a Ph.D. from NYU's Center for Data Science, specializing in machine learning, causal inference, and their applications in combating online misinformation. I founded and lead SimPPL, a nonprofit research collective with the mission of improving trust on the social internet. We train global majority students to build responsible AI tools at scale, winning grants and awards from Google, Wikimedia, Amazon, and others.
+
+An issue I am passionate about is how can we provide agency to youth and spotlight student voices to speak their truths, highlight platform harms, and suggest meaningful solutions through community-based participatory design in tech and policy? To answer this question, I would like to discuss "Pathways for Contribution" by global majority members at all levels of expertise to the trust and safety discourse both through advocacy as well as quantitative contributions. How can we bring non-trust and safety professionals into this sphere of work to improve the diversity of skills and experiences constituting the community? What are the costs to achieve this at a national scale? Would this include designing grassroots training ventures through lectures and hands-on workshops designed to equip a younger audience with the tools to build responsible technological solutions? What are the modes for the deployment of such programs and do they currently reach such communities? I believe answering such questions and unlocking these pathways not only increases the reach of the T&S community but also strengthens our collective voice to drive global change.

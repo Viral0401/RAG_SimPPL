@@ -1,0 +1,14 @@
+langchain_openai
+langchain_core
+langchain_community
+# chromadb
+faiss-cpu
+pypdf
+sentence_transformers
+python-dotenv
+tiktoken
+openai
+langchainhub
+langchain
+python-docx
+nltk

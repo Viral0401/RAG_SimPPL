@@ -1,12 +1,16 @@
 import streamlit as st
 import os
+from pathlib import Path
 from dotenv import load_dotenv
-from langchain_community.document_loaders import PyPDFLoader, Docx2txtLoader
+from langchain_community.document_loaders import PyPDFLoader, UnstructuredWordDocumentLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_community.vectorstores import FAISS
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.documents import Document
+import nltk
+
+nltk.download('averaged_perceptron_tagger_eng')
 
 # --- Load .env ---
 load_dotenv()
@@ -14,145 +18,142 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # --- Config ---
 embedding_model = "text-embedding-3-small"
-doc_dir = "documents"
-persist_base_dir = "./faiss_db"
+doc_dir = "Grants"
+persist_dir = "./vectorstore"
 chunk_size = 800
 chunk_overlap = 200
 top_k_initial = 15
 top_k_final = 5
 
-st.set_page_config(page_title="Grant QA System", layout="wide")
-st.title("📑 Grant Document Q&A Assistant")
+# --- Streamlit Config ---
+st.set_page_config(page_title="Grant & Fellowship Chat Assistant", layout="wide")
+st.title("💬 Grant & Fellowship Application Assistant")
 
-# --- Document Loading ---
+# --- Chat Memory ---
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+
+if st.button("🧹 Clear Chat"):
+    st.session_state.chat_history = []
+
+# --- Document Loader ---
 @st.cache_resource
-def load_documents():
+def load_all_documents():
     splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
-    file_chunks = {}
-
-    for filename in os.listdir(doc_dir):
-        path = os.path.join(doc_dir, filename)
-        if filename.endswith(".pdf"):
-            loader = PyPDFLoader(path)
-        elif filename.endswith(".docx"):
-            loader = Docx2txtLoader(path)
-        else:
+    all_chunks = []
+    for path in Path(doc_dir).rglob("*"):
+        if path.suffix not in [".pdf", ".docx"]:
             continue
+        loader = PyPDFLoader(str(path)) if path.suffix == ".pdf" else UnstructuredWordDocumentLoader(str(path))
+        try:
+            docs = loader.load()
+            chunks = splitter.split_documents(docs)
+            for i, doc in enumerate(chunks):
+                doc.metadata["filename"] = str(path.relative_to(doc_dir)).replace("\\", "/")
+                doc.metadata["chunk_id"] = i
+                all_chunks.append(doc)
+        except Exception as e:
+            st.warning(f"❌ Error loading {path}: {e}")
+    return all_chunks
 
-        docs = loader.load()
-        chunks = splitter.split_documents(docs)
-        for i, doc in enumerate(chunks):
-            doc.metadata["filename"] = filename
-            doc.metadata["chunk_id"] = i
-        file_chunks[filename] = chunks
-
-    return file_chunks
-
-# --- Vectorstore Creation / Loading ---
-def get_or_create_faiss(doc_name, docs_split):
-    embedding = OpenAIEmbeddings(model=embedding_model, openai_api_key=OPENAI_API_KEY)
-    faiss_path = os.path.join(persist_base_dir, doc_name.replace(" ", "_"))
-
-    if os.path.exists(faiss_path):
-        return FAISS.load_local(faiss_path, embeddings=embedding, allow_dangerous_deserialization=True)
+# --- Vectorstore ---
+def get_or_create_vectorstore(chunks):
+    if not os.path.exists(persist_dir):
+        os.makedirs(persist_dir)
+        embeddings = OpenAIEmbeddings(model=embedding_model, openai_api_key=OPENAI_API_KEY)
+        vectorstore = FAISS.from_documents(chunks, embeddings)
+        vectorstore.save_local(persist_dir)
     else:
-        vectorstore = FAISS.from_documents(docs_split, embedding)
-        vectorstore.save_local(faiss_path)
-        return vectorstore
+        embeddings = OpenAIEmbeddings(model=embedding_model, openai_api_key=OPENAI_API_KEY)
+        vectorstore = FAISS.load_local(persist_dir, embeddings, allow_dangerous_deserialization=True)
+    return vectorstore
 
-# --- Reranking Function ---
-def rerank_chunks_with_llm(question, docs: list[Document], top_n=5):
+# --- Rerank ---
+def rerank_with_llm(question, docs, top_n=5):
     llm = ChatOpenAI(openai_api_key=OPENAI_API_KEY, temperature=0)
-    scored_docs = []
-
+    scored = []
     for doc in docs:
-        prompt = f"""
-You are a helpful assistant. Score how relevant the following chunk is for answering the user's question.
+        prompt = f"""You are a helpful assistant. Score how relevant this chunk is to answering the user's question.
 
-Respond with a number from 0 to 10.
+        Chunk:
+        \"\"\"
+        {doc.page_content}
+        \"\"\"
 
-Chunk:
-\"\"\"
-{doc.page_content}
-\"\"\"
+        Question: {question}
 
-Question: {question}
-
-Score:"""
+        Score (0 to 10):"""
         try:
             score = float(llm.predict(prompt).strip())
         except:
             score = 0.0
-        scored_docs.append((score, doc))
+        scored.append((score, doc))
+    return [doc for score, doc in sorted(scored, reverse=True, key=lambda x: x[0])[:top_n]]
 
-    scored_docs.sort(reverse=True, key=lambda x: x[0])
-    return [doc for score, doc in scored_docs[:top_n]]
+# --- Main Chat Interaction ---
+chunks = load_all_documents()
+vectorstore = get_or_create_vectorstore(chunks)
+# #---------------------
+# all_docs = vectorstore.similarity_search("dummy", k=1000)
+# filenames = set(doc.metadata.get("filename", "unknown") for doc in all_docs)
 
-# --- Load & Setup ---
-file_chunks = load_documents()
-doc_names = list(file_chunks.keys())
-selected_doc = st.selectbox("Select a document to query:", doc_names)
-query = st.text_input("Ask a question about the selected document:")
+# st.markdown("### 📁 Documents in Vectorstore:")
+# for fname in sorted(filenames):
+#     st.markdown(f"- {fname}")
+# #----------------------
+query = st.chat_input("Ask something about your grant/fellowship...")
 
-# --- Main QA Pipeline ---
 if query:
-    with st.spinner("🔍 Thinking..."):
-        docs_split = file_chunks[selected_doc]
-        vectorstore = get_or_create_faiss(selected_doc, docs_split)
+    with st.spinner("Thinking..."):
         retriever = vectorstore.as_retriever(search_kwargs={"k": top_k_initial})
-        retrieved_docs = retriever.get_relevant_documents(query)
+        relevant_chunks = retriever.get_relevant_documents(query)
+        reranked = rerank_with_llm(query, relevant_chunks, top_k_final)
 
-        reranked_docs = rerank_chunks_with_llm(query, retrieved_docs, top_n=top_k_final)
+        # Inline Citations
+        context = ""
+        inline_map = {}
+        for doc in reranked:
+            marker = f"[Chunk {doc.metadata['chunk_id']}]"
+            inline_map[marker] = (doc.metadata['chunk_id'], doc.metadata['filename'], doc.page_content)
+            context += f"{marker}\n{doc.page_content}\n\n---\n\n"
 
-        # Format citations
-        citations = []
-        context_blocks = []
-        for doc in reranked_docs:
-            filename = doc.metadata.get("filename", "unknown")
-            chunk_id = doc.metadata.get("chunk_id", "n/a")
-            context_blocks.append(doc.page_content)
-            citations.append(f"[Chunk {chunk_id}] — *{filename}*")
+        # Construct LLM prompt using memory
+        full_history = ""
+        for turn in st.session_state.chat_history:
+            full_history += f"User: {turn['question']}\nAssistant: {turn['answer' ]}\n\n"
 
-        context = "\n\n---\n\n".join(context_blocks)
-        citation_text = "\n".join(citations)
+        chat_prompt = ChatPromptTemplate.from_template("""
+        You are a helpful assistant for the SimPPL organization supporting someone with fellowship and grant applications.
 
-        prompt_template = ChatPromptTemplate.from_template("""
-You are an intelligent assistant supporting a nonprofit organization in drafting effective grant proposals.
+        Only use the **provided document context** to answer. Do NOT answer from memory or external knowledge.
+        Use inline citations like [Chunk X] to indicate where each part of your answer comes from.
 
-Your job is to answer questions **based only on the context provided**, which comes from specific grant-related documents (e.g., fellowship proposals, grant calls, previous applications).
+        If the context does not contain an exact match, look for related or adjacent examples (e.g. similar themes, past projects, or comparable goals).
 
-Respond clearly and concisely. If the answer is not present in the provided context, respond with:
+        Here is the chat so far:
+        {history}
 
-"I don’t know based on the document."
+        Now, the user has asked:
+        Question: {question}
 
-Avoid making assumptions. Do not use any external knowledge or generate answers from general understanding — rely strictly on the context.
+        Here is the relevant document context:
+        {context}
 
-Context:
-{context}
+        Give your answer using only the context, with inline citations like [Chunk X].
+        """)
+        llm = ChatOpenAI(openai_api_key=OPENAI_API_KEY, model = "gpt-4o")
+        #gpt-3.5-turbo gpt-4o o1 o3-mini
+        prompt = chat_prompt.format(history=full_history, context=context, question=query)
+        answer = llm.predict(prompt)
 
-Question: {question}
-""")
-        llm = ChatOpenAI(openai_api_key=OPENAI_API_KEY, temperature=0)
-        prompt = prompt_template.format(context=context, question=query)
-        response = llm.predict(prompt)
+        # Save chat
+        st.session_state.chat_history.append({"question": query, "answer": answer, "sources": inline_map})
 
-        # --- Output ---
-        st.subheader("🧠 Answer")
-        st.markdown(response)
-
-        st.markdown("#### 📄 Citations")
-        for doc in reranked_docs:
-            chunk_id = doc.metadata.get('chunk_id')
-            filename = doc.metadata.get('filename')
-            anchor = f"chunk-{chunk_id}"
-            st.markdown(f"- [Chunk {chunk_id}](#{anchor}) — *{filename}*")
-
-        st.markdown("#### 🧩 Full Source Chunks")
-        for doc in reranked_docs:
-            chunk_id = doc.metadata.get('chunk_id')
-            filename = doc.metadata.get('filename')
-            anchor = f"chunk-{chunk_id}"
-
-            st.markdown(f"<a name='{anchor}'></a>", unsafe_allow_html=True)
-            st.markdown(f"**[Chunk {chunk_id}]** — *{filename}*")
-            st.code(doc.page_content.strip()[:1000])
+# --- Display Chat Thread ---
+for turn in st.session_state.chat_history:
+    st.chat_message("user").markdown(turn["question"])
+    st.chat_message("assistant").markdown(turn["answer"])
+    with st.expander("📄 Source Chunks"):
+        for marker, (cid, fname, content) in turn["sources"].items():
+            st.markdown(f"**{marker}** — *{fname}*")
+            st.code(content.strip()[:1000])
