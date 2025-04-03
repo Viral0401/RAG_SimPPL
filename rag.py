@@ -12,8 +12,7 @@ import nltk
 
 nltk.download('averaged_perceptron_tagger_eng')
 
-# --- Load .env ---
-# load_dotenv()
+# --- Load API Key from Streamlit Secrets ---
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 
 # --- Config ---
@@ -25,7 +24,7 @@ chunk_overlap = 200
 top_k_initial = 15
 top_k_final = 5
 
-# --- Streamlit Config ---
+# --- Streamlit Setup ---
 st.set_page_config(page_title="Grant & Fellowship Chat Assistant", layout="wide")
 st.title("💬 Grant & Fellowship Application Assistant")
 
@@ -75,14 +74,14 @@ def rerank_with_llm(question, docs, top_n=5):
     for doc in docs:
         prompt = f"""You are a helpful assistant. Score how relevant this chunk is to answering the user's question.
 
-        Chunk:
-        \"\"\"
-        {doc.page_content}
-        \"\"\"
+Chunk:
+\"\"\"
+{doc.page_content}
+\"\"\"
 
-        Question: {question}
+Question: {question}
 
-        Score (0 to 10):"""
+Score (0 to 10):"""
         try:
             score = float(llm.predict(prompt).strip())
         except:
@@ -90,17 +89,9 @@ def rerank_with_llm(question, docs, top_n=5):
         scored.append((score, doc))
     return [doc for score, doc in sorted(scored, reverse=True, key=lambda x: x[0])[:top_n]]
 
-# --- Main Chat Interaction ---
+# --- Main Chat ---
 chunks = load_all_documents()
 vectorstore = get_or_create_vectorstore(chunks)
-# #---------------------
-# all_docs = vectorstore.similarity_search("dummy", k=1000)
-# filenames = set(doc.metadata.get("filename", "unknown") for doc in all_docs)
-
-# st.markdown("### 📁 Documents in Vectorstore:")
-# for fname in sorted(filenames):
-#     st.markdown(f"- {fname}")
-# #----------------------
 query = st.chat_input("Ask something about your grant/fellowship...")
 
 if query:
@@ -109,51 +100,54 @@ if query:
         relevant_chunks = retriever.get_relevant_documents(query)
         reranked = rerank_with_llm(query, relevant_chunks, top_k_final)
 
-        # Inline Citations
+        # Prepare context + citation links
         context = ""
         inline_map = {}
         for doc in reranked:
-            marker = f"[Chunk {doc.metadata['chunk_id']}]"
-            inline_map[marker] = (doc.metadata['chunk_id'], doc.metadata['filename'], doc.page_content)
+            chunk_id = doc.metadata["chunk_id"]
+            marker = f"[Chunk {chunk_id}](#chunk-{chunk_id})"
             context += f"{marker}\n{doc.page_content}\n\n---\n\n"
+            inline_map[marker] = (chunk_id, doc.metadata["filename"], doc.page_content)
 
-        # Construct LLM prompt using memory
+        # Format chat history
         full_history = ""
         for turn in st.session_state.chat_history:
-            full_history += f"User: {turn['question']}\nAssistant: {turn['answer' ]}\n\n"
+            full_history += f"User: {turn['question']}\nAssistant: {turn['answer']}\n\n"
 
+        # Prompt LLM
         chat_prompt = ChatPromptTemplate.from_template("""
-        You are a helpful assistant for the SimPPL organization supporting someone with fellowship and grant applications.
+You are a helpful assistant for the SimPPL organization supporting someone with fellowship and grant applications.
 
-        Only use the **provided document context** to answer. Do NOT answer from memory or external knowledge.
-        Use inline citations like [Chunk X] to indicate where each part of your answer comes from.
+Only use the **provided document context** to answer. Do NOT answer from memory or external knowledge.
+Use inline citations like [Chunk X](#chunk-X) to indicate where each part of your answer comes from.
 
-        If the context does not contain an exact match, look for related or adjacent examples (e.g. similar themes, past projects, or comparable goals).
+If the context does not contain an exact match, look for related or adjacent examples (e.g. similar themes, past projects, or comparable goals).
 
-        Here is the chat so far:
-        {history}
+Here is the chat so far:
+{history}
 
-        Now, the user has asked:
-        Question: {question}
+Now, the user has asked:
+Question: {question}
 
-        Here is the relevant document context:
-        {context}
+Here is the relevant document context:
+{context}
 
-        Give your answer using only the context, with inline citations like [Chunk X].
-        """)
-        llm = ChatOpenAI(openai_api_key=OPENAI_API_KEY, model = "gpt-4o")
-        #gpt-3.5-turbo gpt-4o o1 o3-mini
+Give your answer using only the context, with inline citations like [Chunk X](#chunk-X).
+""")
+        llm = ChatOpenAI(openai_api_key=OPENAI_API_KEY, model="gpt-4o", temperature=0)
         prompt = chat_prompt.format(history=full_history, context=context, question=query)
         answer = llm.predict(prompt)
 
         # Save chat
         st.session_state.chat_history.append({"question": query, "answer": answer, "sources": inline_map})
 
-# --- Display Chat Thread ---
+# --- Display Chat UI ---
 for turn in st.session_state.chat_history:
     st.chat_message("user").markdown(turn["question"])
     st.chat_message("assistant").markdown(turn["answer"])
     with st.expander("📄 Source Chunks"):
         for marker, (cid, fname, content) in turn["sources"].items():
+            anchor = f"chunk-{cid}"
+            st.markdown(f"<a name='{anchor}'></a>", unsafe_allow_html=True)
             st.markdown(f"**{marker}** — *{fname}*")
             st.code(content.strip()[:1000])
