@@ -12,3 +12,4 @@ langchainhub
 langchain
 python-docx
 nltk
+unstructured
