@@ -13,8 +13,8 @@ import nltk
 nltk.download('averaged_perceptron_tagger_eng')
 
 # --- Load .env ---
-load_dotenv()
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+# load_dotenv()
+OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 
 # --- Config ---
 embedding_model = "text-embedding-3-small"
