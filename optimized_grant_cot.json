@@ -5,13 +5,13 @@
     "demos": [
       {
         "question": "What challenge is your MIT PKG project solving?",
-        "reasoning": "Let's think step by step. The applicant describes that menstrual hygiene misinformation is a serious issue in Bangladesh. They aim to deliver verified health content via WhatsApp in Bengali.",
-        "answer": "We aim to improve menstrual hygiene awareness in Bangladesh using a Bengali WhatsApp chatbot grounded in accurate information."
+        "reasoning": "The problem is that millions of women and girls in Bangladesh lack access to accurate, culturally relevant menstrual hygiene information. Existing physical interventions are effective but hard to scale. Their chatbot bridges this gap using WhatsApp and LLMs.",
+        "answer": "We present a Bengali WhatsApp chatbot to deliver a digital literacy intervention for improving menstrual hygiene management awareness among local populations in Bangladesh. We use large language models grounded in verified and accurate information to support community-based participatory research in partnership with WaterAid Bangladesh."
       },
       {
         "question": "What impact has the exploreCSR grant had on your past programs?",
-        "reasoning": "The grant allowed scaling fellowships, expanding to underserved groups, and deploying global impact solutions.",
-        "answer": "The exploreCSR grant enabled us to scale responsible computing fellowships, support underserved students, and deploy solutions with nonprofits and global partners."
+        "reasoning": "The grant enabled a fellowship program, allowing students to publish, deploy social-good solutions, and even incubate startups like Sakhi. It bridged research training and real-world deployment.",
+        "answer": "The exploreCSR grant allowed us to scale responsible computing fellowships across underserved colleges in India. Students created research-backed tools deployed with UN and nonprofits. One group built Sakhi, a menstrual health chatbot now incubated at MIT. Fellows went on to mentor NYU and MIT students in capstone projects."
       }
     ],
     "signature": {

@@ -5,58 +5,58 @@ trainset = [
     # === MIT PKG Innovation Fellowship ===
     dspy.Example(
         question="What challenge is your MIT PKG project solving?",
-        reasoning="Let's think step by step. The applicant describes that menstrual hygiene misinformation is a serious issue in Bangladesh. They aim to deliver verified health content via WhatsApp in Bengali.",
-        answer="We aim to improve menstrual hygiene awareness in Bangladesh using a Bengali WhatsApp chatbot grounded in accurate information."
+        reasoning="The problem is that millions of women and girls in Bangladesh lack access to accurate, culturally relevant menstrual hygiene information. Existing physical interventions are effective but hard to scale. Their chatbot bridges this gap using WhatsApp and LLMs.",
+        answer="We present a Bengali WhatsApp chatbot to deliver a digital literacy intervention for improving menstrual hygiene management awareness among local populations in Bangladesh. We use large language models grounded in verified and accurate information to support community-based participatory research in partnership with WaterAid Bangladesh."
     ).with_inputs("question"),
 
     dspy.Example(
         question="What makes your solution to menstrual health education effective?",
-        reasoning="The effectiveness comes from verified content delivery via WhatsApp, designed with WaterAid and community input.",
-        answer="Our chatbot delivers verified menstrual health information through WhatsApp, combining LLMs and local partnership with WaterAid for impact."
+        reasoning="The chatbot is accessible through WhatsApp, supports Bengali, and is powered by RAG from verified health sources. It’s designed with safety, cultural sensitivity, and scale in mind.",
+        answer="Our chatbot Sakhi is built on retrieval augmented generation and delivers responses grounded in trusted content from WHO, UNICEF, and WaterAid Bangladesh. Supporting Bengali and ‘Beng-lish,’ it ensures inclusivity. Deployed on WhatsApp, it provides safe, private, and interactive education with built-in guardrails."
     ).with_inputs("question"),
 
     dspy.Example(
         question="Who are your implementation partners in the MIT PKG project?",
-        reasoning="The team has collaborated with WaterAid Bangladesh for field-level access and content credibility.",
-        answer="We’re working with WaterAid Bangladesh as our local implementation partner to enhance outreach and trust."
+        reasoning="WaterAid Bangladesh is the local deployment partner providing trust and reach in the community. They co-designed rollout strategies and signed an MoU. The team also consulted local developers with healthcare experience.",
+        answer="We partner with WaterAid Bangladesh, whose staff have built strong relationships with the community. They assist with deployment, feedback collection, and provide domain-specific insights. We also engaged female Bengali-speaking app developers to ensure the chatbot design was community-informed."
     ).with_inputs("question"),
 
     # === Mozilla Senior Fellowship Application ===
     dspy.Example(
         question="What kinds of projects are Mozilla Senior Fellows expected to undertake?",
-        reasoning="Mozilla seeks systemic interventions in AI that promote inclusion, transparency, and empowerment.",
-        answer="Senior Fellows are expected to undertake independent projects that advance trustworthy AI and intersect with social justice, transparency, and inclusion."
+        reasoning="Projects should influence the trustworthy AI ecosystem and address social justice. Examples include AI regulation research, dataset transparency, and tech accountability initiatives.",
+        answer="Senior Fellows are expected to pursue independent projects that build a more human-centered internet. These include research on AI regulation, dataset fairness, and open-source governance, intersecting with climate, labor, surveillance, or racial justice to shift systemic power structures."
     ).with_inputs("question"),
 
     dspy.Example(
         question="How should AI-related laws and regulations be assessed?",
-        reasoning="Assessment involves oversight systems, enforcement mechanisms, and ensuring rights are upheld.",
-        answer="AI laws should be assessed through robust oversight mechanisms, audits, public reporting, and community-based feedback."
+        reasoning="Laws should be monitored using oversight mechanisms, enforcement strategies, and community-based input. The focus is on ensuring people’s rights are upheld through transparency and audits.",
+        answer="AI-related laws and regulations should be assessed using robust oversight mechanisms, enforcement frameworks, community input, and audits. This ensures public accountability and safeguards users’ rights in real-world deployments."
     ).with_inputs("question"),
 
     dspy.Example(
         question="What is expected of a Mozilla Fellow during their term?",
-        reasoning="Fellows are expected to commit to independent work, participate in cohort events, and share their work publicly.",
-        answer="Fellows are expected to participate in cohort gatherings, collaborate on shared learning, and produce publicly available work."
+        reasoning="Fellows must carry out an impactful independent project, engage with a cohort, and contribute to Mozilla’s ecosystem through public learning and community-based work.",
+        answer="Fellows are expected to use the fellowship as a platform for independent work that furthers trustworthy AI, collaborate across disciplines and geographies, and publish their findings to foster open, inclusive digital environments."
     ).with_inputs("question"),
 
     # === exploreCSR Grant Proposal ===
     dspy.Example(
         question="What impact has the exploreCSR grant had on your past programs?",
-        reasoning="The grant allowed scaling fellowships, expanding to underserved groups, and deploying global impact solutions.",
-        answer="The exploreCSR grant enabled us to scale responsible computing fellowships, support underserved students, and deploy solutions with nonprofits and global partners."
+        reasoning="The grant enabled a fellowship program, allowing students to publish, deploy social-good solutions, and even incubate startups like Sakhi. It bridged research training and real-world deployment.",
+        answer="The exploreCSR grant allowed us to scale responsible computing fellowships across underserved colleges in India. Students created research-backed tools deployed with UN and nonprofits. One group built Sakhi, a menstrual health chatbot now incubated at MIT. Fellows went on to mentor NYU and MIT students in capstone projects."
     ).with_inputs("question"),
 
     dspy.Example(
         question="How does your program center marginalized students?",
-        reasoning="The proposal highlights equitable practices such as stipends, local mentors, and nontraditional learning formats.",
-        answer="We prioritize underserved students by offering stipends, mentorship, and accessible formats to support their participation."
+        reasoning="The program focuses on underserved communities, offering stipends, practical training, and mentorship. It builds computing capacity through real-world impact.",
+        answer="We center historically marginalized groups by recruiting students from Tier II and III colleges, offering stipends, providing access to mentorship and compute resources, and helping them lead socially impactful research. Our fellows now mentor globally and present at top research venues."
     ).with_inputs("question"),
 
     dspy.Example(
         question="What are the core goals of your exploreCSR initiative?",
-        reasoning="The core goals involve capacity-building, research training, and real-world deployment for societal good.",
-        answer="Our goals are to build student capacity in computing research, foster inclusive mentorship, and deploy solutions in socially impactful domains."
+        reasoning="The goals are to develop inclusive research capacity, scale student-led social computing projects, and integrate responsible computing into departmental culture.",
+        answer="Our core goals are to build student capacity in computing research, promote responsible and inclusive innovation, and integrate community-based, real-world challenges into the academic curriculum to drive systemic change."
     ).with_inputs("question"),
 
 ]
