@@ -13,3 +13,10 @@ langchain
 python-docx
 nltk
 unstructured
+dspy-ai
+jinja2
+langchain-community
+langchain-core
+langchain-openai
+streamlit
+rank_bm25
