@@ -20,8 +20,6 @@ langchain-core
 langchain-openai
 streamlit
 rank_bm25
-fitz
-base64
 streamlit-shadcn-ui
 requests
 mistralai
