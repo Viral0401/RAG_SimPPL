@@ -12,7 +12,6 @@ import dspy  # type: ignore
 from dspy import Prediction  # type: ignore
 import base64
 from io import BytesIO
-import fitz
 import requests
 import json
 import openai
