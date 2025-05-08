@@ -23,3 +23,4 @@ rank_bm25
 streamlit-shadcn-ui
 requests
 mistralai
+fitz
