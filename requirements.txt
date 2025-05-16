@@ -24,3 +24,4 @@ streamlit-shadcn-ui
 requests
 mistralai
 fitz
+streamlit-pdf-viewer
