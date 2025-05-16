@@ -17,6 +17,7 @@ import json
 import openai
 from openai import OpenAI
 from mistralai import Mistral # type: ignore
+from streamlit_pdf_viewer import pdf_viewer # type: ignore
 
 from grant_cot_module import GrantCoTModule
 optimized_cot = GrantCoTModule()
@@ -177,11 +178,12 @@ with st.sidebar:
 
     pdf_text = ""
     if uploaded_pdf:
-        # Show PDF viewer
-        base64_pdf = base64.b64encode(uploaded_pdf.read()).decode('utf-8')
-        pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="400px" type="application/pdf"></iframe>'
+    # Read the uploaded PDF file
+        pdf_bytes = uploaded_pdf.read()
+
+        # Display the PDF using streamlit-pdf-viewer
         st.markdown("### 📄 PDF Preview")
-        st.markdown(pdf_display, unsafe_allow_html=True)
+        pdf_viewer(input=pdf_bytes, width=700)
 
         # --- Mistral OCR Extraction ---
         with st.spinner("🔍 Extracting text from PDF using Mistral OCR..."):
